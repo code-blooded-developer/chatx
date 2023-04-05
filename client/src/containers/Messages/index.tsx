@@ -1,9 +1,23 @@
+import { useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+import { AppStore, AppDispatch } from "@/store/store";
+
+import { setMessages } from "@/store/reducers/socketReducer";
+
 import { useSocket } from "@/context/socket";
 import { EVENTS } from "@/utils/constants";
-import { useRef } from "react";
 
 const MessagesContainer: React.FC = () => {
-  const { socket, roomId, messages, username, setMessages } = useSocket();
+  const dispatch = useDispatch<AppDispatch>();
+  const { username, roomId, messages } = useSelector((state: AppStore) => ({
+    username: state.app.username,
+    roomId: state.socket.roomId,
+    messages: state.socket.messages,
+  }));
+
+  const { socket } = useSocket();
+
   const newMessageRef = useRef<HTMLTextAreaElement>(null);
 
   if (!roomId) {
@@ -20,14 +34,16 @@ const MessagesContainer: React.FC = () => {
       socket.emit(EVENTS.CLIENT.SEND_MESSAGE, { username, roomId, message });
 
       const today = new Date();
-      setMessages([
-        ...messages,
-        {
-          username,
-          message,
-          time: `${today.getHours()}:${today.getMinutes()}`,
-        },
-      ]);
+      dispatch(
+        setMessages([
+          ...messages,
+          {
+            username,
+            message,
+            time: `${today.getHours()}:${today.getMinutes()}`,
+          },
+        ])
+      );
 
       newMessageRef.current.value = "";
     }

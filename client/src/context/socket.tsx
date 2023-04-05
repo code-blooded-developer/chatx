@@ -1,70 +1,49 @@
-import { EVENTS } from "@/utils/constants";
 import { createContext, useContext, useState } from "react";
 import io, { Socket } from "socket.io-client";
+import { useSelector, useDispatch } from "react-redux";
 
-interface Message {
-  message: string;
-  username: string;
-  time: string;
-}
+import { AppStore, AppDispatch } from "@/store/store";
+
+import {
+  setRooms,
+  setRoomId,
+  setMessages,
+} from "@/store/reducers/socketReducer";
+
+import { EVENTS } from "@/utils/constants";
 
 interface IContextType {
   socket: Socket;
-  username: string;
-  setUsername: Function;
-  roomId: string;
-  rooms: {
-    [key: string]: {
-      name: string;
-    };
-  };
-  messages: Message[];
-  setMessages: Function;
 }
 
 const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "");
 const SocketContext = createContext<IContextType>({
   socket,
-  username: "",
-  setUsername: () => false,
-  roomId: "",
-  rooms: {},
-  messages: [],
-  setMessages: () => false,
 });
 
 function SocketProvider(props: any) {
-  const [username, setUsername] = useState("");
-  const [roomId, setRoomId] = useState("");
-  const [rooms, setRooms] = useState({});
-  const [messages, setMessages] = useState<Message[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const { messages } = useSelector((state: AppStore) => ({
+    messages: state.socket.messages,
+  }));
 
   socket.on(EVENTS.SERVER.ROOMS, (value) => {
-    setRooms(value);
+    dispatch(setRooms(value));
   });
 
   socket.on(EVENTS.SERVER.JOINED_ROOM, (value) => {
-    setRoomId(value);
-    setMessages([]);
+    dispatch(setRoomId(value));
+    dispatch(setMessages([]));
   });
 
-  socket.on(
-    EVENTS.SERVER.RECEIVED_MSG,
-    ({ message, username, time }: Message) => {
-      setMessages([...messages, { message, username, time }]);
-    }
-  );
+  socket.on(EVENTS.SERVER.RECEIVED_MSG, ({ message, username, time }) => {
+    dispatch(setMessages([...messages, { message, username, time }]));
+  });
 
   return (
     <SocketContext.Provider
       value={{
         socket,
-        username,
-        setUsername,
-        roomId,
-        rooms,
-        messages,
-        setMessages,
       }}
       {...props}
     />

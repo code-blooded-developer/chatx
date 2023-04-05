@@ -1,10 +1,17 @@
-import { useSocket } from "@/context/socket";
 import { useRef } from "react";
+import { useSelector } from "react-redux";
+
+import { AppStore } from "@/store/store";
+import { useSocket } from "@/context/socket";
 
 import { EVENTS } from "@/utils/constants";
 
 const RoomsContainer: React.FC = () => {
-  const { socket, rooms, roomId } = useSocket();
+  const { rooms, roomId } = useSelector((state: AppStore) => ({
+    rooms: state.socket.rooms,
+    roomId: state.socket.roomId,
+  }));
+  const { socket } = useSocket();
   const newRoomRef = useRef<HTMLInputElement>(null);
 
   function handleRoomCreate() {

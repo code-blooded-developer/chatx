@@ -1,14 +1,21 @@
+import { useRef } from "react";
 import Head from "next/head";
-import styles from "@/styles/Home.module.css";
+import { useSelector, useDispatch } from "react-redux";
 
-import { useSocket } from "@/context/socket";
+import { AppStore, AppDispatch } from "@/store/store";
+import { setUsername } from "@/store/reducers/appReducer";
 
 import RoomsContainer from "@/containers/Rooms";
 import MessagesContainer from "@/containers/Messages";
-import { useRef } from "react";
+
+import styles from "@/styles/Home.module.css";
 
 export default function Home() {
-  const { username, setUsername } = useSocket();
+  const dispatch = useDispatch<AppDispatch>();
+  const { username } = useSelector((state: AppStore) => ({
+    username: state.app.username,
+  }));
+
   const usernameRef = useRef<HTMLInputElement>(null);
 
   function handleUsername() {
@@ -16,7 +23,7 @@ export default function Home() {
     if (!value) {
       return;
     }
-    setUsername(value);
+    dispatch(setUsername(value));
   }
 
   return (
